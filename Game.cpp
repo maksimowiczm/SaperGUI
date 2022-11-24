@@ -1,12 +1,32 @@
 #include "Game.hpp"
 
-Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : panel_(panel)
+#include <future>
+
+Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines,
+           std::function<void(bool win, int time)>* end) : end_(end), panel_(panel)
 {
-	const auto grid = new wxBoxSizer(wxVERTICAL);
+	//const auto grid = new wxBoxSizer(wxVERTICAL);
+	auto grid = panel->GetSizer();
 	board_ = new Board(cols, rows, mines);
 	cols_ = new int16_t(cols);
-	rows_ = rows;
-	playing_ = true;
+	rows_ = new int16_t(rows);
+	mines_ = new int16_t(mines);
+	headerMutex_ = new std::mutex();
+
+	{
+		const auto row = new wxGridSizer(5);
+		timeLabel_ = new wxStaticText(panel_, wxID_ANY, "0");
+		minesLeftLabel_ = new wxStaticText(panel_, wxID_ANY, std::to_string(mines), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
+		timeLabel_->SetForegroundColour(wxColour(*wxWHITE));
+		minesLeftLabel_->SetForegroundColour(wxColour(*wxWHITE));
+
+		row->AddSpacer(1);
+		row->Add(timeLabel_, 0, wxEXPAND);
+		row->AddSpacer(1);
+		row->Add(minesLeftLabel_, 0, wxEXPAND);
+		row->AddSpacer(1);
+		grid->Add(row, 0, wxEXPAND);
+	}
 
 	for (int i = 0; i < rows; i++)
 	{
@@ -32,9 +52,14 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 Game::~Game()
 {
 	delete board_;
+	delete checkedCells_;
+
+	playing_ = false;
+	if (timer_->joinable())
+		timer_->join();
 }
 
-int Game::Start()
+void Game::Start()
 {
 	// RIGHT CLICK
 	const std::function<void(wxMouseEvent& e)> rightClick = [this](const wxMouseEvent& e)
@@ -45,30 +70,60 @@ int Game::Start()
 		const auto btn = dynamic_cast<wxButton*>(e.GetEventObject());
 
 		const auto [x, y] = getCellCoordiatesById(e.GetId(), *cols_);
-		if (board_->board_[y][x].isRevealed)
+		const auto& cell = board_->board_[y][x];
+		if (cell.isRevealed)
+			return;
+		if (!cell.isChecked && *checkedCells_ + 1 > *mines_)
 			return;
 
 		if (board_->CheckSwitch(x, y))
+		{
 			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::CHECKED));
+			minesLeftLabel_->SetLabel(std::to_string(*mines_ - ++*checkedCells_));
+		}
 		else
+		{
 			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::HIDDEN));
+			minesLeftLabel_->SetLabel(std::to_string(*mines_ - --*checkedCells_));
+		}
+
+		headerMutex_->lock();
+		panel_->Layout();
+		headerMutex_->unlock();
 	};
 
 	// LEFT CLICK
 	const std::function<void(wxMouseEvent& e)> leftClick = [this](const wxMouseEvent& e)
 	{
+		if (revealedCells_ == 0)
+		{
+			playing_ = true;
+
+			timer_ = new std::thread([this]
+			{
+				while (playing_)
+				{
+					timeLabel_->SetLabel(std::to_string(time_++));
+					headerMutex_->lock();
+					panel_->Layout();
+					headerMutex_->unlock();
+					std::this_thread::sleep_for(std::chrono::seconds(1));
+				}
+			});
+		}
+
 		if (!playing_)
 			return;
 
 		const auto [x, y] = getCellCoordiatesById(e.GetId(), *cols_);
 		const auto cells = board_->RevealCell(x, y);
-		revealed_cells_ += cells.size();
+		revealedCells_ += cells.size();
 
 		for (const auto& cell : cells)
 		{
 			if (cell.isMine)
 			{
-				explode();
+				End(false);
 				return;
 			}
 
@@ -81,6 +136,9 @@ int Game::Start()
 				buttons_[index]->SetForegroundColour(GetCellTextColour(cell.minesAround));
 			}
 		}
+
+		if (revealedCells_ == *cols_ * *rows_ - *mines_)
+			End(true);
 	};
 
 	for (const auto& btn : buttons_)
@@ -88,8 +146,6 @@ int Game::Start()
 		btn->Bind(wxEVT_RIGHT_UP, rightClick);
 		btn->Bind(wxEVT_LEFT_UP, leftClick);
 	}
-
-	return -1;
 }
 
 std::tuple<int16_t, int16_t> Game::getCellCoordiatesById(const int id, const int16_t cols)
@@ -157,11 +213,30 @@ wxColour Game::GetCellColour(const CELLSTATUS colour)
 
 void Game::explode()
 {
-	playing_ = false;
 	const auto mines = board_->allMines_;
 
 	for (const auto& mines : mines)
 	{
 		buttons_[getCellIdByCoordiates(mines.x, mines.y, *cols_)]->SetBackgroundColour(GetCellColour(CELLSTATUS::BLOWN));
 	}
+
+	//panel_->Layout();
+}
+
+void Game::End(const bool win)
+{
+	playing_ = false;
+
+	if (!win)
+	{
+		auto future = std::async(std::launch::async, [this]
+		{
+			explode();
+		});
+	}
+
+
+	//std::this_thread::sleep_for(std::chrono::seconds(5));
+	timer_->join();
+	(*end_)(win, time_);
 }

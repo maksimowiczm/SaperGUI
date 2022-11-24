@@ -1,11 +1,11 @@
 #pragma once
 #include <wx/wxprec.h>
 
-#include "Game.hpp"
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
 #endif
 
+#include "Game.hpp"
 
 class MyFrame : public wxFrame
 {
@@ -16,8 +16,7 @@ private:
 	};
 
 	wxPanel* panel_;
-	wxStaticText* logo_;
-	Game* game_;
+	Game* game_ = nullptr;
 	wxSizer* grid_;
 
 	using MenuItem = std::tuple<std::wstring, std::function<void(wxMouseEvent& e)>>;
@@ -26,18 +25,21 @@ private:
 	std::vector<MenuItem> difficultyMenu_;
 	std::vector<MenuItem> gameOverMenu_;
 
-	std::vector<std::tuple<int16_t, int16_t, int16_t>> levels_{
+	using level_t = std::tuple<int16_t, int16_t, int16_t>;
+	std::vector<level_t> levels_{
 		{8, 8, 10},
 		{16, 16, 40},
 		{30, 16, 99}
 	};
 
-	void startGame(std::tuple<int16_t, int16_t, int16_t> level);
+	void endGame(bool win, int time);
+	void displayLogo() const;
 
 public:
+	void startGame(level_t level);
 	MyFrame();
 	~MyFrame() override;
 
 	void Menu();
-	void UpdateMenu();
+	void UpdateMenu(bool clear, bool logo) const;
 };

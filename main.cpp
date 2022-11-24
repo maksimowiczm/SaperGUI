@@ -4,7 +4,8 @@
 #include <wx/wx.h>
 #endif
 
-#include "Menu.hpp"
+#include <future>
+
 #include "MyFrame.hpp"
 
 class MyApp final : public wxApp
@@ -14,8 +15,6 @@ public:
 	{
 		const auto frame = new MyFrame();
 		frame->Show(true);
-
-		//frame->StartGame();
 		frame->Menu();
 
 		return true;
