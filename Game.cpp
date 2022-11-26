@@ -2,16 +2,17 @@
 
 #include <future>
 
-Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines,
-           std::function<void(bool win, int time)>* end) : end_(end), panel_(panel)
+Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : panel_(panel)
 {
-	//const auto grid = new wxBoxSizer(wxVERTICAL);
 	auto grid = panel->GetSizer();
+
+	if (grid == nullptr)
+		grid = new wxBoxSizer(wxVERTICAL);
+
 	board_ = new Board(cols, rows, mines);
 	cols_ = new int16_t(cols);
 	rows_ = new int16_t(rows);
 	mines_ = new int16_t(mines);
-	headerMutex_ = new std::mutex();
 
 	{
 		const auto row = new wxGridSizer(5);
@@ -34,7 +35,7 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 
 		for (int j = 0; j < cols; j++)
 		{
-			auto btn = new wxButton(panel_, firstButtonId + buttons_.size(), "", wxDefaultPosition, wxSize(32, 32), wxBORDER_NONE);
+			auto btn = new wxButton(panel_, getCellIdByCoordinates(j, i, cols), "", wxDefaultPosition, wxSize(32, 32), wxBORDER_NONE);
 
 			btn->SetOwnBackgroundColour(wxColour(50, 50, 50, 255));
 
@@ -46,7 +47,6 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 	}
 
 	panel_->SetSizerAndFit(grid);
-	grid->Layout();
 }
 
 Game::~Game()
@@ -55,21 +55,25 @@ Game::~Game()
 	delete checkedCells_;
 
 	playing_ = false;
-	if (timer_->joinable())
+	if (timer_ != nullptr && timer_->joinable())
 		timer_->join();
+
+	panel_->GetSizer()->Clear(true);
 }
 
 void Game::Start()
 {
 	// RIGHT CLICK
-	const std::function<void(wxMouseEvent& e)> rightClick = [this](const wxMouseEvent& e)
+	const std::function rightClick = [this](const wxMouseEvent& e)
 	{
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
+		std::cout << e.GetId() << ' ' << x << ' ' << y << '\n';
+
 		if (!playing_)
 			return;
 
 		const auto btn = dynamic_cast<wxButton*>(e.GetEventObject());
 
-		const auto [x, y] = getCellCoordiatesById(e.GetId(), *cols_);
 		const auto& cell = board_->board_[y][x];
 		if (cell.isRevealed)
 			return;
@@ -86,39 +90,25 @@ void Game::Start()
 			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::HIDDEN));
 			minesLeftLabel_->SetLabel(std::to_string(*mines_ - --*checkedCells_));
 		}
-
-		headerMutex_->lock();
 		panel_->Layout();
-		headerMutex_->unlock();
 	};
 
 	// LEFT CLICK
-	const std::function<void(wxMouseEvent& e)> leftClick = [this](const wxMouseEvent& e)
+	const std::function leftClick = [this](const wxMouseEvent& e)
 	{
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
+		std::cout << e.GetId() << ' ' << x << ' ' << y << '\n';
+
 		if (revealedCells_ == 0)
 		{
 			playing_ = true;
-
-			timer_ = new std::thread([this]
-			{
-				while (playing_)
-				{
-					timeLabel_->SetLabel(std::to_string(time_++));
-					headerMutex_->lock();
-					panel_->Layout();
-					headerMutex_->unlock();
-					std::this_thread::sleep_for(std::chrono::seconds(1));
-				}
-			});
+			startTimer();
 		}
 
 		if (!playing_)
 			return;
 
-		const auto [x, y] = getCellCoordiatesById(e.GetId(), *cols_);
 		const auto cells = board_->RevealCell(x, y);
-		revealedCells_ += cells.size();
-
 		for (const auto& cell : cells)
 		{
 			if (cell.isMine)
@@ -127,7 +117,7 @@ void Game::Start()
 				return;
 			}
 
-			const auto index = getCellIdByCoordiates(cell.x, cell.y, *cols_);
+			const auto index = getCellIndexByCoordinates(cell.x, cell.y, *cols_);
 			buttons_[index]->SetBackgroundColour(GetCellColour(CELLSTATUS::REVEALED));
 
 			if (cell.minesAround > 0)
@@ -137,18 +127,19 @@ void Game::Start()
 			}
 		}
 
+		revealedCells_ += cells.size();
 		if (revealedCells_ == *cols_ * *rows_ - *mines_)
 			End(true);
 	};
 
 	for (const auto& btn : buttons_)
 	{
-		btn->Bind(wxEVT_RIGHT_UP, rightClick);
-		btn->Bind(wxEVT_LEFT_UP, leftClick);
+		btn->Bind(wxEVT_LEFT_DOWN, leftClick);
+		btn->Bind(wxEVT_RIGHT_DOWN, rightClick);
 	}
 }
 
-std::tuple<int16_t, int16_t> Game::getCellCoordiatesById(const int id, const int16_t cols)
+std::tuple<int16_t, int16_t> Game::getCellCoordinatesById(const int id, const int16_t cols)
 {
 	int col = (id - firstButtonId) % cols;
 	int tempId = id - firstButtonId;
@@ -162,9 +153,14 @@ std::tuple<int16_t, int16_t> Game::getCellCoordiatesById(const int id, const int
 	return {col, row - 1};
 }
 
-int Game::getCellIdByCoordiates(const int16_t x, const int16_t y, const int16_t cols)
+inline int Game::getCellIndexByCoordinates(const int16_t x, const int16_t y, const int16_t cols)
 {
 	return y * cols + x;
+}
+
+inline int Game::getCellIdByCoordinates(const int16_t x, const int16_t y, const int16_t cols)
+{
+	return getCellIndexByCoordinates(x, y, cols) + firstButtonId;
 }
 
 wxColour Game::GetCellTextColour(const int mines)
@@ -211,32 +207,52 @@ wxColour Game::GetCellColour(const CELLSTATUS colour)
 	}
 }
 
-void Game::explode()
+void Game::explode(const wxColour& colour) const
 {
 	const auto mines = board_->allMines_;
 
 	for (const auto& mines : mines)
 	{
-		buttons_[getCellIdByCoordiates(mines.x, mines.y, *cols_)]->SetBackgroundColour(GetCellColour(CELLSTATUS::BLOWN));
+		buttons_[getCellIndexByCoordinates(mines.x, mines.y, *cols_)]->SetBackgroundColour(colour);
 	}
-
-	//panel_->Layout();
 }
 
 void Game::End(const bool win)
 {
 	playing_ = false;
+	over_ = true;
+	win_ = win;
 
-	if (!win)
+	if (timer_ != nullptr && timer_->joinable())
+		timer_->join();
+
+	if (win)
+		explode(GetCellColour(CELLSTATUS::WIN));
+	else
+		explode(GetCellColour(CELLSTATUS::BLOWN));
+}
+
+std::tuple<bool, bool, int> Game::End() const
+{
+	if (timer_ != nullptr && timer_->joinable())
+		return {false, false, 0};
+
+	return {over_, win_, time_};
+}
+
+
+inline void Game::startTimer()
+{
+	timer_ = new std::thread([this]
 	{
-		auto future = std::async(std::launch::async, [this]
+		while (playing_)
 		{
-			explode();
-		});
-	}
+			timeLabel_->CallAfter([this]
+			{
+				timeLabel_->SetLabel(std::to_string(time_++));
+			});
 
-
-	//std::this_thread::sleep_for(std::chrono::seconds(5));
-	timer_->join();
-	(*end_)(win, time_);
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+	});
 }

@@ -1,12 +1,18 @@
 ﻿#include "MyFrame.hpp"
 
+#include <future>
+#include <utility>
+
 MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
 {
+	//SetBackgroundColour(wxColour(0, 0, 0, 255));
+
 	panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	panel_->SetBackgroundColour(wxColour(0, 0, 0, 255));
-	grid_ = new wxBoxSizer(wxVERTICAL);
 
-	menu_.emplace_back();
+	grid_ = new wxBoxSizer(wxVERTICAL);
+	//grid_->SetMinSize(500, 500);
+
 	menu_ = {
 		{
 			L"START", [this](wxMouseEvent& e)
@@ -66,18 +72,31 @@ MyFrame::~MyFrame()
 		delete game_;
 }
 
-void MyFrame::startGame(level_t level)
+void MyFrame::startGame(const level_t& level)
 {
 	grid_->Clear(true);
 
 	if (game_ != nullptr)
 		delete game_;
 
-	const auto [cols, rows, mines] = level;
-	const auto func = new std::function([this](const bool win, const int time) { endGame(win, time); });
-	game_ = new Game(panel_, cols, rows, mines, func);
+	const auto& [cols, rows, mines] = level;
+
+	game_ = new Game(panel_, cols, rows, mines);
 	Fit();
 	game_->Start();
+
+	while (true)
+	{
+		if (const auto [status, win, time] = game_->End(); status)
+		{
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+			endGame(win, time);
+			break;
+		}
+
+		wxYield();
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
 }
 
 void MyFrame::endGame(const bool win, const int time)
@@ -139,4 +158,5 @@ void MyFrame::UpdateMenu(const bool clear, const bool logo) const
 	}
 
 	panel_->SetSizerAndFit(grid_, true);
+	//panel_->Layout();
 }

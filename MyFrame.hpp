@@ -7,6 +7,8 @@
 
 #include "Game.hpp"
 
+#include <future>
+
 class MyFrame : public wxFrame
 {
 private:
@@ -36,7 +38,7 @@ private:
 	void displayLogo() const;
 
 public:
-	void startGame(level_t level);
+	void startGame(const level_t& level);
 	MyFrame();
 	~MyFrame() override;
 

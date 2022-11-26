@@ -3,9 +3,6 @@
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
 #endif
-
-#include <atomic>
-#include <mutex>
 #include <thread>
 
 #include "Logika/Board.hpp"
@@ -28,8 +25,6 @@ private:
 
 	static wxColour GetCellColour(CELLSTATUS colour);
 
-
-	std::function<void(bool win, int time)>* end_;
 	Board* board_;
 	wxPanel* panel_;
 	std::vector<wxButton*> buttons_{};
@@ -38,20 +33,24 @@ private:
 	int16_t* rows_;
 	int16_t* mines_;
 
-	std::mutex* headerMutex_;
 	std::atomic<bool> playing_ = false;
+	bool over_ = false;
+	bool win_ = false;
 	std::thread* timer_;
 	std::atomic<int> time_;
 	wxStaticText* timeLabel_;
 	int revealedCells_{};
 	int* checkedCells_ = new int(0);
 
-	static std::tuple<int16_t, int16_t> getCellCoordiatesById(int id, int16_t cols);
-	static int getCellIdByCoordiates(int16_t x, int16_t y, int16_t cols);
-	void explode();
-public:
-	Game(wxPanel* panel, int16_t cols, int16_t rows, int16_t mines, std::function<void(bool win, int time)>* end);
-	void Start();
+	static std::tuple<int16_t, int16_t> getCellCoordinatesById(int id, int16_t cols);
+	static int getCellIndexByCoordinates(int16_t x, int16_t y, int16_t cols);
+	static int getCellIdByCoordinates(int16_t x, int16_t y, int16_t cols);
+	void explode(const wxColour& colour) const;
+	void startTimer();
 	void End(bool win);
+public:
+	Game(wxPanel* panel, int16_t cols, int16_t rows, int16_t mines);
+	void Start();
+	std::tuple<bool, bool, int> End() const;
 	~Game();
 };
