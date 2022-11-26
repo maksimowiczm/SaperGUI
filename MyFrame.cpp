@@ -5,16 +5,14 @@
 
 MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
 {
-	//SetBackgroundColour(wxColour(0, 0, 0, 255));
-
 	panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	panel_->SetBackgroundColour(wxColour(0, 0, 0, 255));
 
 	grid_ = new wxBoxSizer(wxVERTICAL);
-	//grid_->SetMinSize(500, 500);
 
 	menu_ = {
 		{
+			true,
 			L"START", [this](wxMouseEvent& e)
 			{
 				this->activeMenu_ = this->difficultyMenu_;
@@ -22,6 +20,7 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
 			}
 		},
 		{
+			true,
 			L"WYJŚCIE",
 			[this](wxMouseEvent& e)
 			{
@@ -31,51 +30,44 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
 	};
 	difficultyMenu_ = {
 		{
+			true,
 			L"ŁATWY", [this](wxMouseEvent& e)
 			{
 				this->startGame(levels_[0]);
 			}
 		},
 		{
+			true,
 			L"ŚREDNI", [this](wxMouseEvent& e)
 			{
 				this->startGame(levels_[1]);
 			}
 		},
 		{
+			true,
 			L"TRUDNY", [this](wxMouseEvent& e)
 			{
 				this->startGame(levels_[2]);
 			}
 		},
 		{
+			true,
 			L"NIESTANDARDOWY", [this](wxMouseEvent& e)
 			{
 			}
 		},
 	};
-	gameOverMenu_ = {
-		{
-			L"POWRÓT DO MENU",
-			[this](wxMouseEvent& e)
-			{
-				this->activeMenu_ = this->menu_;
-				UpdateMenu(true, true);
-			}
-		}
-	};
 }
 
 MyFrame::~MyFrame()
 {
+	end_ = true;
 	if (game_ != nullptr)
 		delete game_;
 }
 
 void MyFrame::startGame(const level_t& level)
 {
-	grid_->Clear(true);
-
 	if (game_ != nullptr)
 		delete game_;
 
@@ -85,7 +77,7 @@ void MyFrame::startGame(const level_t& level)
 	Fit();
 	game_->Start();
 
-	while (true)
+	while (!end_)
 	{
 		if (const auto [status, win, time] = game_->End(); status)
 		{
@@ -103,27 +95,30 @@ void MyFrame::endGame(const bool win, const int time)
 {
 	grid_->Clear(true);
 
-	displayLogo();
-
-	const auto label = new wxStaticText(panel_, wxID_ANY, win ? "ROZBROJONE" : "GAME OVER", wxDefaultPosition, wxDefaultSize,
-	                                    wxALIGN_CENTRE_HORIZONTAL);
-	label->SetForegroundColour(wxColour(*wxWHITE));
-	grid_->Add(label);
+	std::vector<MenuItem> menu = {
+		{
+			false,
+			(win ? L"ROZBROJONE" : L"GAME OVER"), nullptr
+		},
+	};
 	if (win)
-	{
-		const auto timeLabel = new wxStaticText(panel_, wxID_ANY, L"TWÓJ CZAS " + std::to_string(time), wxDefaultPosition, wxDefaultSize,
-		                                        wxALIGN_CENTRE_HORIZONTAL);
-		timeLabel->SetForegroundColour(wxColour(*wxWHITE));
-		grid_->Add(timeLabel);
-	}
+		menu.emplace_back(false, L"TWÓJ CZAS " + std::to_wstring(time), nullptr);
 
-	activeMenu_ = gameOverMenu_;
-	UpdateMenu(false, false);
+	menu.emplace_back(true, L"POWRÓT DO MENU",
+	                  [this](wxMouseEvent& e)
+	                  {
+		                  this->activeMenu_ = this->menu_;
+		                  UpdateMenu(true, true);
+	                  });
+	menu.emplace_back(false, L"", nullptr);
+
+	activeMenu_ = menu;
+	UpdateMenu(true, true);
 }
 
 void MyFrame::displayLogo() const
 {
-	const auto logo = new wxStaticText(panel_, wxID_ANY, "SAPER", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
+	const auto logo = new wxStaticText(panel_, wxID_ANY, "SAPER", wxDefaultPosition, {256, 50}, wxALIGN_CENTRE_HORIZONTAL);
 	logo->SetForegroundColour(wxColour(*wxWHITE));
 	wxFont font = logo->GetFont();
 	font.SetPointSize(20);
@@ -138,25 +133,31 @@ void MyFrame::Menu()
 	UpdateMenu(false, true);
 }
 
-void MyFrame::UpdateMenu(const bool clear, const bool logo) const
+void MyFrame::UpdateMenu(const bool clear, const bool logo)
 {
-	if (grid_ == nullptr)
-		std::cerr << "nullptr";
-
 	if (clear)
 		grid_->Clear(true);
 
 	if (logo)
 		displayLogo();
 
-	for (const auto& [label, func] : activeMenu_)
+	for (const auto& [active, label, func] : activeMenu_)
 	{
-		const auto item = new wxStaticText(panel_, wxID_ANY, label, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
-		item->SetForegroundColour(wxColour(*wxWHITE));
-		item->Bind(wxEVT_LEFT_UP, func);
-		grid_->Add(item);
+		const auto item = new wxStaticText(panel_, wxID_ANY, label, wxDefaultPosition, {256, 50}, wxALIGN_CENTRE_HORIZONTAL);
+		if (active)
+		{
+			item->SetForegroundColour({200, 224, 244, 255});
+			item->Bind(wxEVT_LEFT_UP, func);
+		}
+		else
+		{
+			item->SetForegroundColour(wxColour(*wxWHITE));
+		}
+
+		grid_->Add(item, 0, wxEXPAND);
 	}
 
-	panel_->SetSizerAndFit(grid_, true);
-	//panel_->Layout();
+	panel_->Layout();
+	panel_->SetSizerAndFit(grid_);
+	Fit();
 }

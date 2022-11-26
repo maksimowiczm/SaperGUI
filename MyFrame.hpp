@@ -12,16 +12,13 @@
 class MyFrame : public wxFrame
 {
 private:
-	enum BUTTONS
-	{
-		START
-	};
-
 	wxPanel* panel_;
 	Game* game_ = nullptr;
 	wxSizer* grid_;
 
-	using MenuItem = std::tuple<std::wstring, std::function<void(wxMouseEvent& e)>>;
+	std::atomic<bool> end_ = false;
+
+	using MenuItem = std::tuple<bool, std::wstring, std::function<void(wxMouseEvent& e)>>;
 	std::vector<MenuItem> activeMenu_;
 	std::vector<MenuItem> menu_;
 	std::vector<MenuItem> difficultyMenu_;
@@ -43,5 +40,5 @@ public:
 	~MyFrame() override;
 
 	void Menu();
-	void UpdateMenu(bool clear, bool logo) const;
+	void UpdateMenu(bool clear, bool logo);
 };

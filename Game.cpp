@@ -4,10 +4,8 @@
 
 Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : panel_(panel)
 {
-	auto grid = panel->GetSizer();
-
-	if (grid == nullptr)
-		grid = new wxBoxSizer(wxVERTICAL);
+	const auto grid = panel_->GetSizer();
+	grid->Clear(true);
 
 	board_ = new Board(cols, rows, mines);
 	cols_ = new int16_t(cols);
@@ -37,7 +35,7 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 		{
 			auto btn = new wxButton(panel_, getCellIdByCoordinates(j, i, cols), "", wxDefaultPosition, wxSize(32, 32), wxBORDER_NONE);
 
-			btn->SetOwnBackgroundColour(wxColour(50, 50, 50, 255));
+			btn->SetOwnBackgroundColour({50, 50, 50, 255});
 
 			buttons_.push_back(btn);
 			row->Add(btn, 0, wxALL, 1);
@@ -82,7 +80,7 @@ void Game::Start()
 
 		if (board_->CheckSwitch(x, y))
 		{
-			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::CHECKED));
+			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::CHECKEDHOVER));
 			minesLeftLabel_->SetLabel(std::to_string(*mines_ - ++*checkedCells_));
 		}
 		else
@@ -132,10 +130,44 @@ void Game::Start()
 			End(true);
 	};
 
+	// HOVER
+	const std::function hover = [this](const wxMouseEvent& e)
+	{
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
+		const auto& cell = board_->board_[y][x];
+
+		const auto btn = dynamic_cast<wxButton*>(e.GetEventObject());
+
+		if (cell.isChecked)
+		{
+			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::CHECKEDHOVER));
+			return;
+		}
+		if (!cell.isRevealed)
+			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::HOVER));
+	};
+
+	const std::function hoverLeft = [this](const wxMouseEvent& e)
+	{
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
+		const auto& cell = board_->board_[y][x];
+		const auto btn = dynamic_cast<wxButton*>(e.GetEventObject());
+
+		if (cell.isChecked)
+		{
+			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::CHECKED));
+			return;
+		}
+		if (!cell.isRevealed)
+			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::HIDDEN));
+	};
+
 	for (const auto& btn : buttons_)
 	{
 		btn->Bind(wxEVT_LEFT_DOWN, leftClick);
 		btn->Bind(wxEVT_RIGHT_DOWN, rightClick);
+		btn->Bind(wxEVT_ENTER_WINDOW, hover);
+		btn->Bind(wxEVT_LEAVE_WINDOW, hoverLeft);
 	}
 }
 
@@ -202,9 +234,13 @@ wxColour Game::GetCellColour(const CELLSTATUS colour)
 		return {200, 200, 200, 255};
 	case CELLSTATUS::WIN:
 		return {0, 255, 0, 255};
-	default:
-		throw std::runtime_error("GetCellColour");
+	case CELLSTATUS::HOVER:
+		return {35, 35, 35, 255};
+	case CELLSTATUS::CHECKEDHOVER:
+		return {200, 0, 0, 255};
 	}
+
+	throw std::runtime_error("GetCellColour");
 }
 
 void Game::explode(const wxColour& colour) const
@@ -234,9 +270,6 @@ void Game::End(const bool win)
 
 std::tuple<bool, bool, int> Game::End() const
 {
-	if (timer_ != nullptr && timer_->joinable())
-		return {false, false, 0};
-
 	return {over_, win_, time_};
 }
 

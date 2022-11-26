@@ -14,7 +14,6 @@ public:
 		const auto frame = new MyFrame();
 		frame->Show(true);
 		frame->Menu();
-		//frame->startGame({ 30,16,99 });
 
 		return true;
 	}

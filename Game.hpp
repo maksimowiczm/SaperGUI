@@ -19,6 +19,8 @@ private:
 		CHECKED,
 		BLOWN,
 		WIN,
+		HOVER,
+		CHECKEDHOVER
 	};
 
 	static wxColour GetCellTextColour(int mines);
