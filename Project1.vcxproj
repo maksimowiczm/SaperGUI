@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CustomLevelDialog.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Logika\Board.cpp" />
     <ClCompile Include="Logika\Cell.cpp" />
@@ -26,6 +27,7 @@
     <ClCompile Include="MyFrame.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CustomLevelDialog.hpp" />
     <ClInclude Include="Game.hpp" />
     <ClInclude Include="Logika\Board.hpp" />
     <ClInclude Include="Logika\Cell.hpp" />

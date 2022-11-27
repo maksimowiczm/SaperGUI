@@ -12,9 +12,12 @@
 class MyFrame : public wxFrame
 {
 private:
+	wxSize DEFAULTSIZE = {1280, 180};
+
 	wxPanel* panel_;
 	Game* game_ = nullptr;
 	wxSizer* grid_;
+	wxFont* font_;
 
 	std::atomic<bool> end_ = false;
 
@@ -40,5 +43,5 @@ public:
 	~MyFrame() override;
 
 	void Menu();
-	void UpdateMenu(bool clear, bool logo);
+	std::vector<wxButton*> UpdateMenu(bool clear, bool logo);
 };

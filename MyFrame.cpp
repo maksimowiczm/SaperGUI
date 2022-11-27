@@ -3,10 +3,15 @@
 #include <future>
 #include <utility>
 
+
+#include "CustomLevelDialog.hpp"
+
 MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
 {
+	SetMinSize({1280, 900});
 	panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	panel_->SetBackgroundColour(wxColour(0, 0, 0, 255));
+	font_ = new wxFont();
 
 	grid_ = new wxBoxSizer(wxVERTICAL);
 
@@ -16,7 +21,7 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
 			L"START", [this](wxMouseEvent& e)
 			{
 				this->activeMenu_ = this->difficultyMenu_;
-				UpdateMenu(true, true);
+				this->UpdateMenu(true, true);
 			}
 		},
 		{
@@ -26,34 +31,45 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
 			{
 				Close(true);
 			}
-		}
+		},
+		{false, L"", nullptr},
+		{false, L"", nullptr},
 	};
 	difficultyMenu_ = {
 		{
 			true,
 			L"ŁATWY", [this](wxMouseEvent& e)
 			{
-				this->startGame(levels_[0]);
+				startGame(levels_[0]);
 			}
 		},
 		{
 			true,
 			L"ŚREDNI", [this](wxMouseEvent& e)
 			{
-				this->startGame(levels_[1]);
+				startGame(levels_[1]);
 			}
 		},
 		{
 			true,
 			L"TRUDNY", [this](wxMouseEvent& e)
 			{
-				this->startGame(levels_[2]);
+				startGame(levels_[2]);
 			}
 		},
 		{
 			true,
 			L"NIESTANDARDOWY", [this](wxMouseEvent& e)
 			{
+				const auto dialog = new myDialog(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,wxCAPTION);
+
+				level_t level;
+				if (const auto status = dialog->ShowModal(); status == wxID_OK)
+					level = dialog->GetLevel();
+
+				dialog->Destroy();
+
+				startGame(level);
 			}
 		},
 	};
@@ -111,6 +127,7 @@ void MyFrame::endGame(const bool win, const int time)
 		                  UpdateMenu(true, true);
 	                  });
 	menu.emplace_back(false, L"", nullptr);
+	menu.emplace_back(false, L"", nullptr);
 
 	activeMenu_ = menu;
 	UpdateMenu(true, true);
@@ -118,10 +135,10 @@ void MyFrame::endGame(const bool win, const int time)
 
 void MyFrame::displayLogo() const
 {
-	const auto logo = new wxStaticText(panel_, wxID_ANY, "SAPER", wxDefaultPosition, {256, 50}, wxALIGN_CENTRE_HORIZONTAL);
+	const auto logo = new wxStaticText(panel_, wxID_ANY, "SAPER", wxDefaultPosition, DEFAULTSIZE, wxALIGN_CENTRE_HORIZONTAL);
 	logo->SetForegroundColour(wxColour(*wxWHITE));
 	wxFont font = logo->GetFont();
-	font.SetPointSize(20);
+	font.SetPointSize(100);
 	font.SetWeight(wxFONTWEIGHT_BOLD);
 	logo->SetFont(font);
 	grid_->Add(logo);
@@ -133,7 +150,7 @@ void MyFrame::Menu()
 	UpdateMenu(false, true);
 }
 
-void MyFrame::UpdateMenu(const bool clear, const bool logo)
+std::vector<wxButton*> MyFrame::UpdateMenu(const bool clear = true, const bool logo = true)
 {
 	if (clear)
 		grid_->Clear(true);
@@ -141,13 +158,32 @@ void MyFrame::UpdateMenu(const bool clear, const bool logo)
 	if (logo)
 		displayLogo();
 
+	std::vector<wxButton*> items{};
 	for (const auto& [active, label, func] : activeMenu_)
 	{
-		const auto item = new wxStaticText(panel_, wxID_ANY, label, wxDefaultPosition, {256, 50}, wxALIGN_CENTRE_HORIZONTAL);
+		const auto item = new wxButton(panel_, wxID_ANY, label, wxDefaultPosition, DEFAULTSIZE, wxBORDER_NONE);
+		items.push_back(item);
+
+		wxFont font = item->GetFont();
+		font.SetPointSize(75);
+		font.SetWeight(wxFONTWEIGHT_BOLD);
+		item->SetFont(font);
+
+		item->SetBackgroundColour({0, 0, 0, 255});
+
 		if (active)
 		{
 			item->SetForegroundColour({200, 224, 244, 255});
+
 			item->Bind(wxEVT_LEFT_UP, func);
+			item->Bind(wxEVT_ENTER_WINDOW, [item](wxMouseEvent& e)
+			{
+				item->SetForegroundColour({222, 0, 0, 255});
+			});
+			item->Bind(wxEVT_LEAVE_WINDOW, [item](wxMouseEvent& e)
+			{
+				item->SetForegroundColour({200, 224, 244, 255});
+			});
 		}
 		else
 		{
@@ -160,4 +196,6 @@ void MyFrame::UpdateMenu(const bool clear, const bool logo)
 	panel_->Layout();
 	panel_->SetSizerAndFit(grid_);
 	Fit();
+
+	return items;
 }

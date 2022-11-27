@@ -12,7 +12,7 @@ public:
 	bool OnInit() override
 	{
 		const auto frame = new MyFrame();
-		frame->Show(true);
+		frame->Show();
 		frame->Menu();
 
 		return true;

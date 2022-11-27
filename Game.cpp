@@ -65,7 +65,6 @@ void Game::Start()
 	const std::function rightClick = [this](const wxMouseEvent& e)
 	{
 		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
-		std::cout << e.GetId() << ' ' << x << ' ' << y << '\n';
 
 		if (!playing_)
 			return;
@@ -95,7 +94,6 @@ void Game::Start()
 	const std::function leftClick = [this](const wxMouseEvent& e)
 	{
 		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
-		std::cout << e.GetId() << ' ' << x << ' ' << y << '\n';
 
 		if (revealedCells_ == 0)
 		{
@@ -126,6 +124,7 @@ void Game::Start()
 		}
 
 		revealedCells_ += cells.size();
+		wxYield();
 		if (revealedCells_ == *cols_ * *rows_ - *mines_)
 			End(true);
 	};
