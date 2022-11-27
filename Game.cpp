@@ -14,16 +14,30 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 
 	{
 		const auto row = new wxGridSizer(5);
-		timeLabel_ = new wxStaticText(panel_, wxID_ANY, "0");
-		minesLeftLabel_ = new wxStaticText(panel_, wxID_ANY, std::to_string(mines), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
-		timeLabel_->SetForegroundColour(wxColour(*wxWHITE));
-		minesLeftLabel_->SetForegroundColour(wxColour(*wxWHITE));
+		{
+			timeLabel_ = new wxStaticText(panel_, wxID_ANY, "0");
+			timeLabel_->SetForegroundColour(wxColour(*wxWHITE));
+			wxFont font = timeLabel_->GetFont();
+			font.SetPointSize(20);
+			font.SetWeight(wxFONTWEIGHT_BOLD);
+			timeLabel_->SetFont(font);
+		}
+
+		{
+			minesLeftLabel_ = new wxStaticText(panel_, wxID_ANY, std::to_string(mines), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
+			minesLeftLabel_->SetForegroundColour(wxColour(*wxWHITE));
+			wxFont font = minesLeftLabel_->GetFont();
+			font.SetPointSize(20);
+			font.SetWeight(wxFONTWEIGHT_BOLD);
+			minesLeftLabel_->SetFont(font);
+		}
 
 		row->AddSpacer(1);
 		row->Add(timeLabel_, 0, wxEXPAND);
 		row->AddSpacer(1);
 		row->Add(minesLeftLabel_, 0, wxEXPAND);
 		row->AddSpacer(1);
+		row->Layout();
 		grid->Add(row, 0, wxEXPAND);
 	}
 
@@ -33,7 +47,10 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 
 		for (int j = 0; j < cols; j++)
 		{
-			auto btn = new wxButton(panel_, getCellIdByCoordinates(j, i, cols), "", wxDefaultPosition, wxSize(32, 32), wxBORDER_NONE);
+			auto btn = new wxButton(panel_, getCellIdByCoordinates(j, i, cols), "", wxDefaultPosition, wxSize(50, 50), wxBORDER_NONE);
+			wxFont font = btn->GetFont();
+			font.SetPointSize(20);
+			btn->SetFont(font);
 
 			btn->SetOwnBackgroundColour({50, 50, 50, 255});
 
@@ -41,9 +58,10 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 			row->Add(btn, 0, wxALL, 1);
 		}
 
-		grid->Add(row, 0);
+		grid->Add(row, 0, wxEXPAND);
 	}
 
+	panel_->Layout();
 	panel_->SetSizerAndFit(grid);
 }
 

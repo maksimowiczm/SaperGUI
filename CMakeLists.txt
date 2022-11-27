@@ -8,7 +8,7 @@ project ("myapp")
 # Add source to this project's executable.
 find_package(wxWidgets REQUIRED COMPONENTS net core base)
 include(${wxWidgets_USE_FILE})
-add_executable (myapp main.cpp MyFrame.cpp MyFrame.hpp Game.cpp Game.hpp "Logika/Board.cpp" "Logika/Cell.cpp" "Logika/Board.hpp" "Logika/Cell.hpp")
+add_executable (myapp main.cpp MyFrame.cpp MyFrame.hpp Game.cpp Game.hpp CustomLevelDialog.cpp CustomLevelDialog.hpp "Logika/Board.cpp" "Logika/Cell.cpp" "Logika/Board.hpp" "Logika/Cell.hpp")
 target_link_libraries(myapp ${wxWidgets_LIBRARIES})
 
 if (CMAKE_VERSION VERSION_GREATER 3.20)

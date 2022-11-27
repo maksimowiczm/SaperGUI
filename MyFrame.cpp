@@ -6,9 +6,8 @@
 
 #include "CustomLevelDialog.hpp"
 
-MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper")
+MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper", wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX | wxMINIMIZE_BOX)
 {
-	SetMinSize({1280, 900});
 	panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	panel_->SetBackgroundColour(wxColour(0, 0, 0, 255));
 	font_ = new wxFont();
@@ -118,7 +117,7 @@ void MyFrame::endGame(const bool win, const int time)
 		},
 	};
 	if (win)
-		menu.emplace_back(false, L"TWÓJ CZAS " + std::to_wstring(time), nullptr);
+		menu.emplace_back(false, L"TWÓJ CZAS: " + std::to_wstring(time), nullptr);
 
 	menu.emplace_back(true, L"POWRÓT DO MENU",
 	                  [this](wxMouseEvent& e)
@@ -127,7 +126,8 @@ void MyFrame::endGame(const bool win, const int time)
 		                  UpdateMenu(true, true);
 	                  });
 	menu.emplace_back(false, L"", nullptr);
-	menu.emplace_back(false, L"", nullptr);
+	if (!win)
+		menu.emplace_back(false, L"", nullptr);
 
 	activeMenu_ = menu;
 	UpdateMenu(true, true);

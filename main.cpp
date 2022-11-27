@@ -19,5 +19,5 @@ public:
 	}
 };
 
-//wxIMPLEMENT_APP(MyApp);
-wxIMPLEMENT_APP_CONSOLE(MyApp);
+wxIMPLEMENT_APP(MyApp);
+//wxIMPLEMENT_APP_CONSOLE(MyApp);
