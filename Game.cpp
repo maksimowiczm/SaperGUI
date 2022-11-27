@@ -217,11 +217,11 @@ wxColour Game::GetCellTextColour(const int mines)
 	switch (mines)
 	{
 	case 1:
-		return {0, 0, 255, 255};
+		return {0, 0, 192, 255};
 	case 2:
-		return {255, 0, 0, 255};
+		return { 192, 0, 0, 255};
 	case 3:
-		return {0, 255, 0, 255};
+		return {0, 192, 0, 255};
 	case 4:
 		return {0, 0, 128, 255};
 	case 5:
