@@ -39,6 +39,8 @@ private:
 
 public:
 	void startGame(const level_t& level);
+	static void ShowConsole();
+	static void HideConsole();
 	MyFrame();
 	~MyFrame() override;
 

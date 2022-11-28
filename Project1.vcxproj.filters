@@ -16,6 +16,9 @@
     <Filter Include="Logika">
       <UniqueIdentifier>{79eb91ea-e32e-4dd5-a171-6c01e141174f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Konsola">
+      <UniqueIdentifier>{e1d8776e-29dd-4e18-9b44-eb6a1b47b04c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Logika\Board.cpp">
@@ -36,6 +39,18 @@
     <ClCompile Include="CustomLevelDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Konsola\ConsoleGame.cpp">
+      <Filter>Konsola</Filter>
+    </ClCompile>
+    <ClCompile Include="Konsola\ConsoleMenu.cpp">
+      <Filter>Konsola</Filter>
+    </ClCompile>
+    <ClCompile Include="Konsola\Alfabet.cpp">
+      <Filter>Konsola</Filter>
+    </ClCompile>
+    <ClCompile Include="Konsola\ConsoleApp.cpp">
+      <Filter>Konsola</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Logika\Board.hpp">
@@ -52,6 +67,18 @@
     </ClInclude>
     <ClInclude Include="CustomLevelDialog.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Konsola\ConsoleMenu.hpp">
+      <Filter>Konsola</Filter>
+    </ClInclude>
+    <ClInclude Include="Konsola\ConsoleGame.hpp">
+      <Filter>Konsola</Filter>
+    </ClInclude>
+    <ClInclude Include="Konsola\Alfabet.hpp">
+      <Filter>Konsola</Filter>
+    </ClInclude>
+    <ClInclude Include="Konsola\ConsoleApp.hpp">
+      <Filter>Konsola</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

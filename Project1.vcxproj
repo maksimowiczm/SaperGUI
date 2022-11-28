@@ -21,6 +21,10 @@
   <ItemGroup>
     <ClCompile Include="CustomLevelDialog.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Konsola\Alfabet.cpp" />
+    <ClCompile Include="Konsola\ConsoleApp.cpp" />
+    <ClCompile Include="Konsola\ConsoleGame.cpp" />
+    <ClCompile Include="Konsola\ConsoleMenu.cpp" />
     <ClCompile Include="Logika\Board.cpp" />
     <ClCompile Include="Logika\Cell.cpp" />
     <ClCompile Include="main.cpp" />
@@ -29,6 +33,10 @@
   <ItemGroup>
     <ClInclude Include="CustomLevelDialog.hpp" />
     <ClInclude Include="Game.hpp" />
+    <ClInclude Include="Konsola\Alfabet.hpp" />
+    <ClInclude Include="Konsola\ConsoleApp.hpp" />
+    <ClInclude Include="Konsola\ConsoleGame.hpp" />
+    <ClInclude Include="Konsola\ConsoleMenu.hpp" />
     <ClInclude Include="Logika\Board.hpp" />
     <ClInclude Include="Logika\Cell.hpp" />
     <ClInclude Include="MyFrame.hpp" />

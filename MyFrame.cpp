@@ -3,11 +3,14 @@
 #include <future>
 #include <utility>
 
-
+#include <Windows.h>
 #include "CustomLevelDialog.hpp"
+#include "Konsola/ConsoleApp.hpp"
 
 MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper", wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX | wxMINIMIZE_BOX)
 {
+	HideConsole();
+
 	panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	panel_->SetBackgroundColour(wxColour(0, 0, 0, 255));
 	font_ = new wxFont();
@@ -25,13 +28,26 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper", wxDefaultPosition, wxDe
 		},
 		{
 			true,
+			L"WERSJA KONSOLOWA", [this](wxMouseEvent& e)
+			{
+				ShowConsole();
+				Hide();
+
+				auto consoleApp = konsola::ConsoleApp();
+				consoleApp.run();
+
+				HideConsole();
+				Show();
+			}
+		},
+		{
+			true,
 			L"WYJŚCIE",
 			[this](wxMouseEvent& e)
 			{
 				Close(true);
 			}
 		},
-		{false, L"", nullptr},
 		{false, L"", nullptr},
 	};
 	difficultyMenu_ = {
@@ -198,4 +214,14 @@ std::vector<wxButton*> MyFrame::UpdateMenu(const bool clear = true, const bool l
 	Fit();
 
 	return items;
+}
+
+void MyFrame::HideConsole()
+{
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+}
+
+void MyFrame::ShowConsole()
+{
+	ShowWindow(GetConsoleWindow(), SW_SHOW);
 }
