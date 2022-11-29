@@ -6,6 +6,7 @@
 
 #include "MyFrame.hpp"
 
+
 class MyApp final : public wxApp
 {
 public:

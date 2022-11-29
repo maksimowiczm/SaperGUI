@@ -1,6 +1,5 @@
 #include "Game.hpp"
 
-#include <future>
 
 Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : board_(cols, rows, mines), panel_(panel)
 {

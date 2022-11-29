@@ -1,11 +1,9 @@
 ﻿#include "MyFrame.hpp"
 
-#include <future>
-#include <utility>
-
 #include <Windows.h>
 #include "CustomLevelDialog.hpp"
 #include "Konsola/ConsoleApp.hpp"
+
 
 MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper", wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX | wxMINIMIZE_BOX)
 {
@@ -13,7 +11,6 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper", wxDefaultPosition, wxDe
 
 	panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 	panel_->SetBackgroundColour(wxColour(0, 0, 0, 255));
-	font_ = new wxFont();
 
 	grid_ = new wxBoxSizer(wxVERTICAL);
 

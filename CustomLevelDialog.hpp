@@ -5,6 +5,7 @@
 #include <wx/wx.h>
 #endif
 
+
 class myDialog : wxDialog
 {
 	int cols_ = 8;
