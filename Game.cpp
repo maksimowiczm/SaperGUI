@@ -61,8 +61,6 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 
 Game::~Game()
 {
-	//delete board_;
-
 	playing_ = false;
 	if (timer_.joinable())
 		timer_.join();
