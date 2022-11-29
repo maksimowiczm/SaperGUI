@@ -11,13 +11,14 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 	cols_ = new int16_t(cols);
 	rows_ = new int16_t(rows);
 	mines_ = new int16_t(mines);
+	wxFont font;
 
 	{
 		const auto row = new wxGridSizer(5);
 		{
 			timeLabel_ = new wxStaticText(panel_, wxID_ANY, "0");
 			timeLabel_->SetForegroundColour(wxColour(*wxWHITE));
-			wxFont font = timeLabel_->GetFont();
+			font = timeLabel_->GetFont();
 			font.SetPointSize(20);
 			font.SetWeight(wxFONTWEIGHT_BOLD);
 			timeLabel_->SetFont(font);
@@ -26,9 +27,6 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 		{
 			minesLeftLabel_ = new wxStaticText(panel_, wxID_ANY, std::to_string(mines), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
 			minesLeftLabel_->SetForegroundColour(wxColour(*wxWHITE));
-			wxFont font = minesLeftLabel_->GetFont();
-			font.SetPointSize(20);
-			font.SetWeight(wxFONTWEIGHT_BOLD);
 			minesLeftLabel_->SetFont(font);
 		}
 
@@ -41,25 +39,22 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 		grid->Add(row, 0, wxEXPAND);
 	}
 
+	font.SetWeight(wxFONTWEIGHT_NORMAL);
+	const auto board = new wxGridSizer(rows, cols, {1, 1});
 	for (int i = 0; i < rows; i++)
 	{
-		const auto row = new wxBoxSizer(wxHORIZONTAL);
-
 		for (int j = 0; j < cols; j++)
 		{
 			auto btn = new wxButton(panel_, getCellIdByCoordinates(j, i, cols), "", wxDefaultPosition, wxSize(50, 50), wxBORDER_NONE);
-			wxFont font = btn->GetFont();
-			font.SetPointSize(20);
 			btn->SetFont(font);
 
 			btn->SetOwnBackgroundColour({50, 50, 50, 255});
 
 			buttons_.push_back(btn);
-			row->Add(btn, 0, wxALL, 1);
+			board->Add(btn);
 		}
-
-		grid->Add(row, 0, wxEXPAND);
 	}
+	grid->Add(board);
 
 	panel_->Layout();
 	panel_->SetSizerAndFit(grid);
@@ -69,6 +64,9 @@ Game::~Game()
 {
 	delete board_;
 	delete checkedCells_;
+	delete cols_;
+	delete rows_;
+	delete mines_;
 
 	playing_ = false;
 	if (timer_ != nullptr && timer_->joinable())
@@ -219,7 +217,7 @@ wxColour Game::GetCellTextColour(const int mines)
 	case 1:
 		return {0, 0, 192, 255};
 	case 2:
-		return { 192, 0, 0, 255};
+		return {192, 0, 0, 255};
 	case 3:
 		return {0, 192, 0, 255};
 	case 4:
