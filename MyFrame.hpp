@@ -11,7 +11,11 @@
 class MyFrame : public wxFrame
 {
 private:
-	wxSize DEFAULTSIZE = {1280, 180};
+	const wxSize DEFAULTSIZE = {1280, 180};
+	const wxColour LOGOCOLOR = {186, 24, 27, 255};
+	const wxColour BACKGROUNDCOLOR = {20, 33, 61, 255};
+	const wxColour BUTTONCOLOR = {255, 255, 255, 255};
+	const wxColour BUTTONHOVERCOLOR = {252, 163, 17, 255};
 
 	wxPanel* panel_;
 	Game* game_ = nullptr;

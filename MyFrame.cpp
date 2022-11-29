@@ -10,7 +10,7 @@ MyFrame::MyFrame() : wxFrame(nullptr, wxID_ANY, "Saper", wxDefaultPosition, wxDe
 	HideConsole();
 
 	panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	panel_->SetBackgroundColour(wxColour(0, 0, 0, 255));
+	panel_->SetBackgroundColour(BACKGROUNDCOLOR);
 
 	grid_ = new wxBoxSizer(wxVERTICAL);
 
@@ -149,7 +149,7 @@ void MyFrame::endGame(const bool win, const int time)
 void MyFrame::displayLogo() const
 {
 	const auto logo = new wxStaticText(panel_, wxID_ANY, "SAPER", wxDefaultPosition, DEFAULTSIZE, wxALIGN_CENTRE_HORIZONTAL);
-	logo->SetForegroundColour(wxColour(*wxWHITE));
+	logo->SetForegroundColour(LOGOCOLOR);
 	wxFont font = logo->GetFont();
 	font.SetPointSize(100);
 	font.SetWeight(wxFONTWEIGHT_BOLD);
@@ -172,30 +172,31 @@ std::vector<wxButton*> MyFrame::UpdateMenu(const bool clear = true, const bool l
 		displayLogo();
 
 	std::vector<wxButton*> items{};
+
+	auto font = wxFont();
+	font.SetPointSize(75);
+	font.SetWeight(wxFONTWEIGHT_BOLD);
+
 	for (const auto& [active, label, func] : activeMenu_)
 	{
 		const auto item = new wxButton(panel_, wxID_ANY, label, wxDefaultPosition, DEFAULTSIZE, wxBORDER_NONE);
 		items.push_back(item);
 
-		wxFont font = item->GetFont();
-		font.SetPointSize(75);
-		font.SetWeight(wxFONTWEIGHT_BOLD);
 		item->SetFont(font);
-
-		item->SetBackgroundColour({0, 0, 0, 255});
+		item->SetBackgroundColour(BACKGROUNDCOLOR);
 
 		if (active)
 		{
-			item->SetForegroundColour({200, 224, 244, 255});
+			item->SetForegroundColour(BUTTONCOLOR);
 
 			item->Bind(wxEVT_LEFT_UP, func);
-			item->Bind(wxEVT_ENTER_WINDOW, [item](wxMouseEvent& e)
+			item->Bind(wxEVT_ENTER_WINDOW, [item, this](wxMouseEvent& e)
 			{
-				item->SetForegroundColour({222, 0, 0, 255});
+				item->SetForegroundColour(BUTTONHOVERCOLOR);
 			});
-			item->Bind(wxEVT_LEAVE_WINDOW, [item](wxMouseEvent& e)
+			item->Bind(wxEVT_LEAVE_WINDOW, [item, this](wxMouseEvent& e)
 			{
-				item->SetForegroundColour({200, 224, 244, 255});
+				item->SetForegroundColour(BUTTONCOLOR);
 			});
 		}
 		else
