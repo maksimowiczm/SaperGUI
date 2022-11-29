@@ -69,8 +69,8 @@ Game::~Game()
 	delete mines_;
 
 	playing_ = false;
-	if (timer_ != nullptr && timer_->joinable())
-		timer_->join();
+	if (timer_.joinable())
+		timer_.join();
 
 	panel_->GetSizer()->Clear(true);
 }
@@ -260,11 +260,16 @@ wxColour Game::GetCellColour(const CELLSTATUS colour)
 
 void Game::explode(const wxColour& colour) const
 {
-	const auto mines = board_->allMines_;
+	const auto& mines = board_->allMines_;
 
-	for (const auto& mines : mines)
+	int i = 0;
+	for (const auto& mine : mines)
 	{
-		buttons_[getCellIndexByCoordinates(mines.x, mines.y, *cols_)]->SetBackgroundColour(colour);
+		buttons_[getCellIndexByCoordinates(mine.x, mine.y, *cols_)]->SetBackgroundColour(colour);
+
+		auto time = static_cast<int>(std::log(i++));
+		std::this_thread::sleep_for(std::chrono::milliseconds(time));
+		wxYield();
 	}
 }
 
@@ -274,8 +279,8 @@ void Game::End(const bool win)
 	over_ = true;
 	win_ = win;
 
-	if (timer_ != nullptr && timer_->joinable())
-		timer_->join();
+	if (timer_.joinable())
+		timer_.join();
 
 	if (win)
 		explode(GetCellColour(CELLSTATUS::WIN));
@@ -291,7 +296,7 @@ std::tuple<bool, bool, int> Game::End() const
 
 inline void Game::startTimer()
 {
-	timer_ = new std::thread([this]
+	timer_ = std::thread([this]
 	{
 		while (playing_)
 		{
@@ -303,4 +308,6 @@ inline void Game::startTimer()
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	});
+
+	timer_.detach();
 }

@@ -38,7 +38,7 @@ private:
 	std::atomic<bool> playing_ = false;
 	bool over_ = false;
 	bool win_ = false;
-	std::thread* timer_;
+	std::thread timer_;
 	std::atomic<int> time_;
 	wxStaticText* timeLabel_;
 	int revealedCells_{};
