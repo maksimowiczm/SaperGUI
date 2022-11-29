@@ -1,41 +1,35 @@
 #include "Game.hpp"
 
 
-Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : board_(cols, rows, mines), panel_(panel)
+Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : cols_(cols), rows_(rows), mines_(mines),
+                                                                                          board_(cols, rows, mines), panel_(panel)
 {
 	const auto grid = panel_->GetSizer();
 	grid->Clear(true);
 
-	cols_ = cols;
-	rows_ = rows;
-	mines_ = mines;
+
 	wxFont font;
+	font.SetPointSize(20);
+	font.SetWeight(wxFONTWEIGHT_BOLD);
 
-	{
-		const auto row = new wxGridSizer(5);
-		{
-			timeLabel_ = new wxStaticText(panel_, wxID_ANY, "0");
-			timeLabel_->SetForegroundColour(wxColour(*wxWHITE));
-			font = timeLabel_->GetFont();
-			font.SetPointSize(20);
-			font.SetWeight(wxFONTWEIGHT_BOLD);
-			timeLabel_->SetFont(font);
-		}
+	const auto header = new wxGridSizer(5);
 
-		{
-			minesLeftLabel_ = new wxStaticText(panel_, wxID_ANY, std::to_string(mines), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
-			minesLeftLabel_->SetForegroundColour(wxColour(*wxWHITE));
-			minesLeftLabel_->SetFont(font);
-		}
+	timeLabel_ = new wxStaticText(panel_, wxID_ANY, "0");
+	timeLabel_->SetForegroundColour(wxColour(*wxWHITE));
+	timeLabel_->SetFont(font);
 
-		row->AddSpacer(1);
-		row->Add(timeLabel_, 0, wxEXPAND);
-		row->AddSpacer(1);
-		row->Add(minesLeftLabel_, 0, wxEXPAND);
-		row->AddSpacer(1);
-		row->Layout();
-		grid->Add(row, 0, wxEXPAND);
-	}
+	minesLeftLabel_ = new wxStaticText(panel_, wxID_ANY, std::to_string(mines), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
+	minesLeftLabel_->SetForegroundColour(wxColour(*wxWHITE));
+	minesLeftLabel_->SetFont(font);
+
+	header->AddSpacer(1);
+	header->Add(timeLabel_, 0, wxEXPAND);
+	header->AddSpacer(1);
+	header->Add(minesLeftLabel_, 0, wxEXPAND);
+	header->AddSpacer(1);
+	header->Layout();
+	grid->Add(header, 0, wxEXPAND);
+
 
 	font.SetWeight(wxFONTWEIGHT_NORMAL);
 	const auto board = new wxGridSizer(rows, cols, {1, 1});
