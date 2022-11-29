@@ -110,7 +110,7 @@ void MyFrame::startGame(const level_t& level)
 
 	while (!end_)
 	{
-		if (const auto [status, win, time] = game_->End(); status)
+		if (const auto [status, win, time] = game_->Status(); status)
 		{
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 			endGame(win, time);

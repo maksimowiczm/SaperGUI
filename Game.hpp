@@ -27,32 +27,37 @@ private:
 
 	static wxColour GetCellColour(CELLSTATUS colour);
 
-	Board* board_;
-	wxPanel* panel_;
-	std::vector<wxButton*> buttons_{};
-	wxStaticText* minesLeftLabel_;
-	int16_t* cols_;
-	int16_t* rows_;
-	int16_t* mines_;
+	int16_t cols_;
+	int16_t rows_;
+	int16_t mines_;
+	Board board_;
 
 	std::atomic<bool> playing_ = false;
 	bool over_ = false;
 	bool win_ = false;
+
+	wxPanel* panel_;
+	std::vector<wxButton*> buttons_{};
+	wxStaticText* minesLeftLabel_;
+	wxStaticText* timeLabel_;
+
 	std::thread timer_;
 	std::atomic<int> time_;
-	wxStaticText* timeLabel_;
+
 	int revealedCells_{};
-	int* checkedCells_ = new int(0);
+	int checkedCells_{};
 
 	static std::tuple<int16_t, int16_t> getCellCoordinatesById(int id, int16_t cols);
 	static int getCellIndexByCoordinates(int16_t x, int16_t y, int16_t cols);
 	static int getCellIdByCoordinates(int16_t x, int16_t y, int16_t cols);
+
 	void explode(const wxColour& colour) const;
 	void startTimer();
-	void End(bool win);
+	void end(bool win);
 public:
 	Game(wxPanel* panel, int16_t cols, int16_t rows, int16_t mines);
-	void Start();
-	std::tuple<bool, bool, int> End() const;
 	~Game();
+
+	void Start();
+	std::tuple<bool, bool, int> Status() const;
 };

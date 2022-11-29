@@ -2,15 +2,14 @@
 
 #include <future>
 
-Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : panel_(panel)
+Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t mines) : board_(cols, rows, mines), panel_(panel)
 {
 	const auto grid = panel_->GetSizer();
 	grid->Clear(true);
 
-	board_ = new Board(cols, rows, mines);
-	cols_ = new int16_t(cols);
-	rows_ = new int16_t(rows);
-	mines_ = new int16_t(mines);
+	cols_ = cols;
+	rows_ = rows;
+	mines_ = mines;
 	wxFont font;
 
 	{
@@ -62,11 +61,7 @@ Game::Game(wxPanel* panel, const int16_t cols, const int16_t rows, const int16_t
 
 Game::~Game()
 {
-	delete board_;
-	delete checkedCells_;
-	delete cols_;
-	delete rows_;
-	delete mines_;
+	//delete board_;
 
 	playing_ = false;
 	if (timer_.joinable())
@@ -80,28 +75,28 @@ void Game::Start()
 	// RIGHT CLICK
 	const std::function rightClick = [this](const wxMouseEvent& e)
 	{
-		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), cols_);
 
 		if (!playing_)
 			return;
 
 		const auto btn = dynamic_cast<wxButton*>(e.GetEventObject());
 
-		const auto& cell = board_->board_[y][x];
+		const auto& cell = board_.board_[y][x];
 		if (cell.isRevealed)
 			return;
-		if (!cell.isChecked && *checkedCells_ + 1 > *mines_)
+		if (!cell.isChecked && checkedCells_ + 1 > mines_)
 			return;
 
-		if (board_->CheckSwitch(x, y))
+		if (board_.CheckSwitch(x, y))
 		{
 			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::CHECKEDHOVER));
-			minesLeftLabel_->SetLabel(std::to_string(*mines_ - ++*checkedCells_));
+			minesLeftLabel_->SetLabel(std::to_string(mines_ - ++checkedCells_));
 		}
 		else
 		{
 			btn->SetBackgroundColour(GetCellColour(CELLSTATUS::HIDDEN));
-			minesLeftLabel_->SetLabel(std::to_string(*mines_ - --*checkedCells_));
+			minesLeftLabel_->SetLabel(std::to_string(mines_ - --checkedCells_));
 		}
 		panel_->Layout();
 	};
@@ -109,7 +104,7 @@ void Game::Start()
 	// LEFT CLICK
 	const std::function leftClick = [this](const wxMouseEvent& e)
 	{
-		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), cols_);
 
 		if (revealedCells_ == 0)
 		{
@@ -120,16 +115,16 @@ void Game::Start()
 		if (!playing_)
 			return;
 
-		const auto cells = board_->RevealCell(x, y);
+		const auto cells = board_.RevealCell(x, y);
 		for (const auto& cell : cells)
 		{
 			if (cell.isMine)
 			{
-				End(false);
+				end(false);
 				return;
 			}
 
-			const auto index = getCellIndexByCoordinates(cell.x, cell.y, *cols_);
+			const auto index = getCellIndexByCoordinates(cell.x, cell.y, cols_);
 			buttons_[index]->SetBackgroundColour(GetCellColour(CELLSTATUS::REVEALED));
 
 			if (cell.minesAround > 0)
@@ -141,15 +136,15 @@ void Game::Start()
 
 		revealedCells_ += cells.size();
 		wxYield();
-		if (revealedCells_ == *cols_ * *rows_ - *mines_)
-			End(true);
+		if (revealedCells_ == cols_ * rows_ - mines_)
+			end(true);
 	};
 
 	// HOVER
 	const std::function hover = [this](const wxMouseEvent& e)
 	{
-		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
-		const auto& cell = board_->board_[y][x];
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), cols_);
+		const auto& cell = board_.board_[y][x];
 
 		const auto btn = dynamic_cast<wxButton*>(e.GetEventObject());
 
@@ -164,8 +159,8 @@ void Game::Start()
 
 	const std::function hoverLeft = [this](const wxMouseEvent& e)
 	{
-		const auto [x, y] = getCellCoordinatesById(e.GetId(), *cols_);
-		const auto& cell = board_->board_[y][x];
+		const auto [x, y] = getCellCoordinatesById(e.GetId(), cols_);
+		const auto& cell = board_.board_[y][x];
 		const auto btn = dynamic_cast<wxButton*>(e.GetEventObject());
 
 		if (cell.isChecked)
@@ -260,12 +255,12 @@ wxColour Game::GetCellColour(const CELLSTATUS colour)
 
 void Game::explode(const wxColour& colour) const
 {
-	const auto& mines = board_->allMines_;
+	const auto& mines = board_.allMines_;
 
 	int i = 0;
 	for (const auto& mine : mines)
 	{
-		buttons_[getCellIndexByCoordinates(mine.x, mine.y, *cols_)]->SetBackgroundColour(colour);
+		buttons_[getCellIndexByCoordinates(mine.x, mine.y, cols_)]->SetBackgroundColour(colour);
 
 		auto time = static_cast<int>(std::log(i++));
 		std::this_thread::sleep_for(std::chrono::milliseconds(time));
@@ -273,7 +268,7 @@ void Game::explode(const wxColour& colour) const
 	}
 }
 
-void Game::End(const bool win)
+void Game::end(const bool win)
 {
 	playing_ = false;
 	over_ = true;
@@ -288,7 +283,7 @@ void Game::End(const bool win)
 		explode(GetCellColour(CELLSTATUS::BLOWN));
 }
 
-std::tuple<bool, bool, int> Game::End() const
+std::tuple<bool, bool, int> Game::Status() const
 {
 	return {over_, win_, time_};
 }
